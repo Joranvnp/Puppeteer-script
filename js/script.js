@@ -11,65 +11,73 @@ dotenv.config();
 
   await page.setViewport({ width: 1080, height: 1024 });
 
-  // const product = await page.$eval("#card_parts", (e) => e.innerHTML);
+  const products = await page.$$eval(
+    "table.align-middle > tbody > tr",
+    (rows) => {
+      return rows.map((row) => {
+        const product = {};
 
-  console.log("aaaaa");
+        const idElement = row.querySelector("td:nth-child(1) > span");
+        product.id = idElement ? idElement.innerHTML : null;
 
-  const products = await page.evaluate(() => {
-    const table = document.querySelector(
-      "table.align-middle > tbody:nth-child(2)"
-    );
-    const rows = table.querySelectorAll("tr");
-    const products = [];
+        const skuElement = row.querySelector(
+          "td:nth-child(2) > a:nth-child(3) > p:nth-child(1) > span:nth-child(1)"
+        );
+        product.sku = skuElement ? skuElement.innerHTML : null;
 
-    for (let i = 0; i < rows.length; i++) {
-      const product = {};
+        const nameElement = row.querySelector(
+          "td:nth-child(3) > div:nth-child(1) > span:nth-child(1)"
+        );
+        product.name = nameElement ? nameElement.innerHTML : null;
 
-      product.id = i + 1;
-
-      const idElement = rows[i].querySelector("td:nth-child(1) > span");
-      product.id = idElement ? idElement.innerHTML : null;
-
-      const skuElement = rows[i].querySelector(
-        "td:nth-child(2) > a:nth-child(3) > p:nth-child(1) > span:nth-child(1)"
-      );
-
-      console.log("test");
-      product.sku = skuElement ? skuElement.innerHTML : null;
-
-      const nameElement = rows[i].querySelector(
-        "td:nth-child(3) > div:nth-child(1) > span:nth-child(1)"
-      );
-      product.name = nameElement ? nameElement.innerHTML : null;
-
-      // element.name = page.$eval(
-      //   "card-header bg-primary > div > text-center col-12 col-lg-4 order-last order-lg-1 > fs-3 text-uppercase fw-bold",
-      //   (e) => {
-      //     return e.innerHTML;
-      //   }
-      // );
-
-      // product.sku = page.eval$(
-      //   "d-flex flex-wrap d-md-table-row > td:nth-child(1) > a > p > span:nth-child(2)",
-      //   (e) => {
-      //     return e.innerHTML;
-      //   }
-      // );
-
-      // const nameElement = element.querySelector(
-      //   "card-header bg-primary > div > text-center col-12 col-lg-4 order-last order-lg-1 > fs-3 text-uppercase fw-bold"
-      // );
-      // product.name = nameElement ? nameElement.innerHTML : null;
-
-      // console.log(product.name);
-
-      // product.coordinateTop = element.getAttribute();
-      // product.coordinateLeft = element.getAttribute();
-      products.push(product);
+        return product;
+      });
     }
+  );
 
-    return products;
+  const coordinates = await page.$$eval("div.parts", (elements) =>
+    elements.map((element) => ({
+      top: element.getAttribute("data-base-top"),
+      left: element.getAttribute("data-base-left"),
+    }))
+  );
+
+  products.forEach((product, index) => {
+    product.coordinates = coordinates[index];
   });
+
+  // const products = await page.evaluate(() => {
+  //   const table = document.querySelector(
+  //     "table.align-middle > tbody:nth-child(2)"
+  //   );
+  //   const rows = table.querySelectorAll("tr");
+  //   const products = [];
+
+  //   for (let i = 0; i < rows.length; i++) {
+  //     const product = {};
+
+  //     product.id = i + 1;
+
+  //     const idElement = rows[i].querySelector("td:nth-child(1) > span");
+  //     product.id = idElement ? idElement.innerHTML : null;
+
+  //     const skuElement = rows[i].querySelector(
+  //       "td:nth-child(2) > a:nth-child(3) > p:nth-child(1) > span:nth-child(1)"
+  //     );
+
+  //     console.log("test");
+  //     product.sku = skuElement ? skuElement.innerHTML : null;
+
+  //     const nameElement = rows[i].querySelector(
+  //       "td:nth-child(3) > div:nth-child(1) > span:nth-child(1)"
+  //     );
+  //     product.name = nameElement ? nameElement.innerHTML : null;
+
+  //     products.push(product);
+  //   }
+
+  //   return products;
+  // });
 
   await browser.close();
 
