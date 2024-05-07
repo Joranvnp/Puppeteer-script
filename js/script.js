@@ -46,6 +46,7 @@ dotenv.config();
     product.coordinates = coordinates[index];
   });
 
+  // Deuxième méthode
   // const products = await page.evaluate(() => {
   //   const table = document.querySelector(
   //     "table.align-middle > tbody:nth-child(2)"
