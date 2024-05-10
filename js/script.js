@@ -22,10 +22,13 @@ dotenv.config();
           ? parseInt(idElement.innerHTML.replace(/\D/g, ""))
           : null;
 
-        const skuElement = row.querySelector(
-          "td:nth-child(2) > a:nth-child(3) > p:nth-child(1) > span:nth-child(1)"
-        );
-        product.sku = skuElement ? skuElement.innerHTML.trim() : null;
+        const skuElement =
+          row.querySelector(
+            "td:nth-child(2) > a:nth-child(3) > p:nth-child(1) > span:nth-child(1)"
+          ) || row.querySelector("td:nth-child(2) > a");
+        product.sku = skuElement
+          ? skuElement.innerHTML.replace(/[<>a-z]/g, "").trim()
+          : null;
 
         const nameElement = row.querySelector(
           "td:nth-child(3) > div:nth-child(1) > span:nth-child(1)"
@@ -46,8 +49,15 @@ dotenv.config();
     }))
   );
 
+  let productsWithCoordinates = [];
+
+  // Parcourez chaque produit
   products.forEach((product, index) => {
-    product.coordinates = coordinates[index];
+    // Pour chaque produit, créez un nouvel objet qui contient les informations du produit et ses coordonnées
+    let newProduct = { ...product, coordinates: coordinates[index] };
+
+    // Ajoutez le nouvel objet au tableau productsWithCoordinates
+    productsWithCoordinates.push(newProduct);
   });
 
   // Deuxième méthode
@@ -84,7 +94,13 @@ dotenv.config();
   //   return products;
   // });
 
+  console.log(`Nombre de produits : ${products.length}`);
+  console.log(`Nombre de coordonnées : ${coordinates.length}`);
+
   await browser.close();
 
-  console.log(products);
+  console.log(productsWithCoordinates);
+  console.log(
+    `Nombre de products avec coordonnées différentes : ${productsWithCoordinates.length}`
+  );
 })();
