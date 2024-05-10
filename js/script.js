@@ -30,6 +30,15 @@ dotenv.config();
         ? skuElement.innerHTML.replace(/[<>a-z]/g, "").trim()
         : null;
 
+      if (product.sku && !product.sku.includes("-")) {
+        product.sku =
+          product.sku.slice(0, 3) +
+          "-" +
+          product.sku.slice(3, product.sku.length - 2) +
+          "-" +
+          product.sku.slice(product.sku.length - 2, product.sku.length);
+      }
+
       const coordinateElement = window.getComputedStyle(row);
       coordinates.top = coordinateElement.getPropertyValue("top")
         ? parseFloat(coordinateElement.getPropertyValue("top"))
@@ -129,6 +138,6 @@ dotenv.config();
 
   await browser.close();
 
-  console.log(products);
+  console.log(JSON.stringify(products));
   console.log(`Nombre de produits : ${products.length}`);
 })();
