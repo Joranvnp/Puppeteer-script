@@ -7,58 +7,91 @@ dotenv.config();
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
-  await page.goto(process.env.URL);
+  await page.goto(process.env.URL, { timeout: 60000 });
 
   await page.setViewport({ width: 1080, height: 1024 });
 
-  const products = await page.$$eval(
-    "table.align-middle > tbody > tr",
-    (rows) => {
-      return rows.map((row) => {
-        const product = {};
+  const products = await page.$$eval("div.parts_details", (rows) => {
+    return rows.map((row) => {
+      const product = {};
+      const coordinates = {};
 
-        const idElement = row.querySelector("td:nth-child(1) > span");
-        product.id = idElement
-          ? parseInt(idElement.innerHTML.replace(/\D/g, ""))
-          : null;
+      const idElement = row.querySelector(
+        "div:nth-child(1) > div:nth-child(1) > span:nth-child(1) > span:nth-child(1)"
+      );
+      product.id = idElement
+        ? parseInt(idElement.innerHTML.replace(/\D/g, ""))
+        : null;
 
-        const skuElement =
-          row.querySelector(
-            "td:nth-child(2) > a:nth-child(3) > p:nth-child(1) > span:nth-child(1)"
-          ) || row.querySelector("td:nth-child(2) > a");
-        product.sku = skuElement
-          ? skuElement.innerHTML.replace(/[<>a-z]/g, "").trim()
-          : null;
+      const skuElement = row.querySelector(
+        "div:nth-child(1) > div:nth-child(1) > span:nth-child(1) > span:nth-child(2)"
+      );
+      product.sku = skuElement
+        ? skuElement.innerHTML.replace(/[<>a-z]/g, "").trim()
+        : null;
 
-        const nameElement = row.querySelector(
-          "td:nth-child(3) > div:nth-child(1) > span:nth-child(1)"
-        );
-        product.name = nameElement
-          ? nameElement.innerHTML.replace(/\n/g, "").trim()
-          : null;
+      const coordinateElement = window.getComputedStyle(row);
+      coordinates.top = coordinateElement.getPropertyValue("top")
+        ? parseFloat(coordinateElement.getPropertyValue("top"))
+        : 0;
+      coordinates.left = coordinateElement.getPropertyValue("left")
+        ? parseFloat(coordinateElement.getPropertyValue("left"))
+        : 0;
 
-        return product;
-      });
-    }
-  );
+      product.coordinates = coordinates;
 
-  const coordinates = await page.$$eval("div.parts", (elements) =>
-    elements.map((element) => ({
-      top: element.getAttribute("data-base-top"),
-      left: element.getAttribute("data-base-left"),
-    }))
-  );
-
-  let productsWithCoordinates = [];
-
-  // Parcourez chaque produit
-  products.forEach((product, index) => {
-    // Pour chaque produit, créez un nouvel objet qui contient les informations du produit et ses coordonnées
-    let newProduct = { ...product, coordinates: coordinates[index] };
-
-    // Ajoutez le nouvel objet au tableau productsWithCoordinates
-    productsWithCoordinates.push(newProduct);
+      return product;
+    });
   });
+
+  // Principal
+  // const products = await page.$$eval(
+  //   "table.align-middle > tbody > tr",
+  //   (rows) => {
+  //     return rows.map((row) => {
+  //       const product = {};
+
+  //       const idElement = row.querySelector("td:nth-child(1) > span");
+  //       product.id = idElement
+  //         ? parseInt(idElement.innerHTML.replace(/\D/g, ""))
+  //         : null;
+
+  //       const skuElement =
+  //         row.querySelector(
+  //           "td:nth-child(2) > a:nth-child(3) > p:nth-child(1) > span:nth-child(1)"
+  //         ) || row.querySelector("td:nth-child(2) > a");
+  //       product.sku = skuElement
+  //         ? skuElement.innerHTML.replace(/[<>a-z]/g, "").trim()
+  //         : null;
+
+  //       const nameElement = row.querySelector(
+  //         "td:nth-child(3) > div:nth-child(1) > span:nth-child(1)"
+  //       );
+  //       product.name = nameElement
+  //         ? nameElement.innerHTML.replace(/\n/g, "").trim()
+  //         : null;
+
+  //       return product;
+  //     });
+  //   }
+  // );
+
+  // Fonctionnel
+  // products.forEach((product, index) => {
+  //   product.coordinates = coordinates[index];
+  // });
+
+  // Test
+  // for (let i = 0; i < products.length; i++) {
+  //   products[i].coordinates = coordinates[i];
+  // }
+
+  // Test
+  // products.forEach((product, productIndex) => {
+  //   coordinates[productIndex].forEach((coordinate) => {
+  //     product.coordinates = coordinate;
+  //   });
+  // });
 
   // Deuxième méthode
   // const products = await page.evaluate(() => {
@@ -94,13 +127,8 @@ dotenv.config();
   //   return products;
   // });
 
-  console.log(`Nombre de produits : ${products.length}`);
-  console.log(`Nombre de coordonnées : ${coordinates.length}`);
-
   await browser.close();
 
-  console.log(productsWithCoordinates);
-  console.log(
-    `Nombre de products avec coordonnées différentes : ${productsWithCoordinates.length}`
-  );
+  console.log(products);
+  console.log(`Nombre de produits : ${products.length}`);
 })();
