@@ -14,6 +14,10 @@ async function launchBrowserAndPage() {
   return { browser, page };
 }
 
+async function closeBrowser(browser) {
+  await browser.close();
+}
+
 (async () => {
   const { browser, page } = await launchBrowserAndPage();
 
@@ -150,7 +154,7 @@ async function launchBrowserAndPage() {
   //   return products;
   // });
 
-  await browser.close();
+  await closeBrowser(browser);
 
   // console.log(JSON.stringify(products, null, 1));
   console.log(products);
