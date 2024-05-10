@@ -3,13 +3,19 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-(async () => {
+async function launchBrowserAndPage() {
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
   await page.goto(process.env.URL, { timeout: 60000 });
 
   await page.setViewport({ width: 1080, height: 1024 });
+
+  return { browser, page };
+}
+
+(async () => {
+  const { browser, page } = await launchBrowserAndPage();
 
   const products = await page.$$eval("div.parts_details", (rows) => {
     return rows.map((row) => {
@@ -21,6 +27,14 @@ dotenv.config();
       );
       product.id = idElement
         ? parseInt(idElement.innerHTML.replace(/\D/g, ""))
+        : null;
+
+      const nameElement = row.querySelector(
+        "div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > span:nth-child(1)"
+      );
+      product.name = nameElement;
+      product.name = nameElement
+        ? nameElement.innerHTML.replace(/\n/g, "").trim()
         : null;
 
       const skuElement = row.querySelector(
@@ -138,6 +152,7 @@ dotenv.config();
 
   await browser.close();
 
-  console.log(JSON.stringify(products));
+  // console.log(JSON.stringify(products, null, 1));
+  console.log(products);
   console.log(`Nombre de produits : ${products.length}`);
 })();
