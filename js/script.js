@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import writeCSV from "./writeCSV.js";
+import writeDB from "./writeDB.js";
 
 async function launchBrowserAndPage() {
   const browser = await puppeteer.launch({ headless: false });
@@ -33,7 +34,7 @@ async function fetchProducts() {
         const idElement = row.querySelector(
           "div:nth-child(1) > div:nth-child(1) > span:nth-child(1) > span:nth-child(1)"
         );
-        product.id = idElement
+        product.idProduct = idElement
           ? parseInt(idElement.innerHTML.replace(/\D/g, ""))
           : null;
 
@@ -69,7 +70,8 @@ async function fetchProducts() {
           ? parseFloat(coordinateElement.getPropertyValue("left"))
           : 0;
 
-        product.coordinates = JSON.stringify(coordinates);
+        // product.coordinates = JSON.stringify(coordinates);
+        product.coordinates = coordinates;
 
         return product;
       });
@@ -158,7 +160,16 @@ async function fetchProducts() {
     //   return products;
     // });
 
-    writeCSV(products);
+    // Ecriture du fichier CSV avec les products
+    // Crée un nouveau tableau avec coordonnées en json
+    const productsCSV = products.map((product) => {
+      const coordinates = product.coordinates;
+      return { ...product, coordinates: JSON.stringify(coordinates) };
+    });
+    writeCSV(productsCSV);
+
+    // Ecriture des products dans la base de données
+    writeDB(products);
 
     await closeBrowser(browser);
 
